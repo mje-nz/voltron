@@ -64,13 +64,15 @@ if HAVE_GDB:
             'i386:x86-64': 'x86_64', 'i386:x86-64:intel': 'x86_64',
             'arm': 'arm', 'armv2': 'arm', 'armv2a': 'arm', 'armv3': 'arm', 'armv3m': 'arm', 'armv4': 'arm',
             'armv4t': 'arm', 'armv5': 'arm', 'armv5t': 'arm', 'armv5te': 'arm',
-            'powerpc:common': 'powerpc'
+            'powerpc:common': 'powerpc',
+            'xtensa': 'xtensa'
         }
         sizes = {
             'x86': 4,
             'x86_64': 8,
             'arm': 4,
             'powerpc': 4,
+            'xtensa': 4
         }
         max_frame = 64
         max_string = 128
@@ -215,6 +217,8 @@ if HAVE_GDB:
                     regs = self.get_registers_arm()
                 elif arch == "powerpc":
                     regs = self.get_registers_powerpc()
+                elif arch == "xtensa":
+                    regs = self.get_registers_xtensa()
                 else:
                     raise UnknownArchitectureException()
 
@@ -503,6 +507,8 @@ if HAVE_GDB:
                 reg = self.get_register_arm(reg_name)
             elif arch == "powerpc":
                 reg = self.get_register_powerpc(reg_name)
+            elif arch == "xtensa":
+                reg = self.get_register_xtensa(reg_name)
             else:
                 raise UnknownArchitectureException()
 
@@ -638,6 +644,28 @@ if HAVE_GDB:
             return vals
 
         def get_register_powerpc(self, reg):
+            log.debug('Getting register: ' + reg)
+            return int(gdb.parse_and_eval('(long)$'+reg)) & 0xFFFFFFFF
+
+        def get_registers_xtensa(self):
+            log.debug('Getting registers')
+            regs = ['pc', 'lbeg', 'lend', 'lcount', 'sar', 'ps', 'threadptr',
+                    'br', 'scompare1', 'acclo', 'acchi', 'm0', 'm1', 'm2', 'm3',
+                    'expstate', 'f64r_lo', 'f64r_hi', 'f64s', 'fcr', 'fsr',
+                    'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9',
+                    'a10', 'a11', 'a12', 'a13', 'a14', 'a15', 'f0', 'f1', 'f2', 'f3',
+                    'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12', 'f13',
+                    'f14', 'f15']
+            vals = {}
+            for reg in regs:
+                try:
+                    vals[reg] = self.get_register_xtensa(reg)
+                except:
+                    log.debug('Failed getting reg: ' + reg)
+                    vals[reg] = 'N/A'
+            return vals
+
+        def get_register_xtensa(self, reg):
             log.debug('Getting register: ' + reg)
             return int(gdb.parse_and_eval('(long)$'+reg)) & 0xFFFFFFFF
 

@@ -127,7 +127,61 @@ class RegisterView (TerminalView):
                 'category':         'general',
             }
         ],
+        'xtensa': [
+            {
+                'regs':             ['pc', 'lbeg', 'lend', 'lcount', 'sar', 'threadptr',
+                                     'a0', 'a1'],
+                'value_format':     SHORT_ADDR_FORMAT_32,
+                'category':         'general',
+            },
+            {
+                'regs':             ['a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9',
+                                     'a10', 'a11', 'a12', 'a13', 'a14', 'a15'],
+                'label_format':     '{0:3s}',
+                'value_format':     SHORT_ADDR_FORMAT_32,
+                'category':         'general',
+            },
+            {
+                'regs':             ['ps'],
+                'value_format':     '{}',
+                'value_func':       'format_xtensa_ps',
+                'value_colour_en':  False,
+                'category':         'general',
+            },
+            {   # MAC16 is close enough to SSE
+                'regs':             ['acclo', 'm0', 'm1', 'm2', 'm3'],
+                'label_format':     '{0:3s}',
+                'value_format':     SHORT_ADDR_FORMAT_32,
+                'category':         'sse',
+            },
+            {
+                'regs':             ['acchi'],
+                'value_format':     SHORT_ADDR_FORMAT_8,
+                'category':         'sse',
+            },
+            {
+                'regs':             ['f64r_lo', 'f64r_hi', 'f64s', 'f0',
+                                     'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8',
+                                     'f9', 'f10', 'f11', 'f12', 'f13', 'f14', 'f15', 'f16'],
+                'label_format':     '{0:3s}',
+                'value_format':     SHORT_ADDR_FORMAT_32,
+                'category':         'fpu',
+            },
+            {
+                'regs':             ['fcr'],
+                'value_format':     '{}',
+                'value_func':       'format_xtensa_fcr',
+                'value_colour_en':  False,
+                'category':         'general',
+            },
+            {   # Boolean registers mostly used with FPU
+                'regs':             ['br'],
+                'value_format':     '{0:0=16b}',
+                'category':         'fpu',
+            },
+        ],
     }
+
     TEMPLATES = {
         'x86_64': {
             'horizontal': {
@@ -387,7 +441,81 @@ class RegisterView (TerminalView):
                     "{x30l} {x30}{x30info}\n"
                 ),
             }
-        }
+        },
+        'xtensa': {
+            'horizontal': {
+                'general': (
+                    "{psl} {ps} {pcl} {pc} {a0l} {a0} {a1l} {a1} {threadptrl} {threadptr}\n"
+                    "{sarl} {sar} {lbegl} {lbeg} {lendl} {lend} {lcountl} {lcount}\n"
+                    "{a2l} {a2} {a3l} {a3} {a4l} {a4} {a5l} {a5} {a6l} {a6} {a7l} {a7} {a8l} {a8}\n"
+                    "{a9l} {a9} {a10l} {a10} {a11l} {a11} {a12l} {a12} {a13l} {a13} {a14l} {a14} {a15l} {a15}"
+                ),
+                'sse': (
+                    "{m0l} {m0} {m1l} {m1} {m2l} {m2} {m3l} {m3} {acchil} {acchi} {acclol} {acclo}"
+                ),
+                'fpu': (
+                    "{fcrl} {fcr} {brl} {br}\n"
+                    "{f0l} {f0} {f1l} {f1} {f2l} {f2} {f3l} {f3} {f4l} {f4} {f5l} {f5}\n"
+                    "{f6l} {f6} {f7l} {f7} {f8l} {f8} {f9l} {f9} {f10l} {f10} {f11l} {f11}\n"
+                    "{f12l} {f12} {f13l} {f13} {f14l} {f14} {f15l} {f15}\n"
+                )
+            },
+            'vertical': {
+                'general': (
+                    "{psl} {ps}\n"
+                    "{pcl}  {pc}{pcinfo}\n"
+                    "{a0l}  {a0}{a0info}\n"
+                    "{a1l}  {a1}{a1info}\n"
+                    "{sarl} {sar}\n"
+                    "{lbegl} {lbeg}{lbeginfo}\n"
+                    "{lendl} {lend}{lendinfo}\n"
+                    "{lcountl} {lcount}\n"
+                    "{threadptrl} {threadptr}{threadptrinfo}\n"
+                    "{a2l} {a2}{a2info}\n"
+                    "{a3l} {a3}{a3info}\n"
+                    "{a4l} {a4}{a4info}\n"
+                    "{a5l} {a5}{a5info}\n"
+                    "{a6l} {a6}{a6info}\n"
+                    "{a7l} {a7}{a7info}\n"
+                    "{a8l} {a8}{a8info}\n"
+                    "{a9l} {a9}{a9info}\n"
+                    "{a10l} {a10}{a10info}\n"
+                    "{a11l} {a11}{a11info}\n"
+                    "{a12l} {a12}{a12info}\n"
+                    "{a13l} {a13}{a13info}\n"
+                    "{a14l} {a14}{a14info}\n"
+                    "{a15l} {a15}{a15info}"
+                ),
+                'sse': (
+                    "{m0l} {m0}\n"
+                    "{m1l} {m1}\n"
+                    "{m2l} {m2}\n"
+                    "{m3l} {m3}\n"
+                    "{acchil} {acchi}\n"
+                    "{acclol} {acclo}"
+                ),
+                'fpu': (
+                    "{fcrl} {fcr}\n"
+                    "{brl}  {br}\n"
+                    "{f0l} {f0}\n"
+                    "{f1l} {f1}\n"
+                    "{f2l} {f2}\n"
+                    "{f3l} {f3}\n"
+                    "{f4l} {f4}\n"
+                    "{f5l} {f5}\n"
+                    "{f6l} {f6}\n"
+                    "{f7l} {f7}\n"
+                    "{f8l} {f8}\n"
+                    "{f9l} {f9}\n"
+                    "{f10l} {f10}\n"
+                    "{f11l} {f11}\n"
+                    "{f12l} {f12}\n"
+                    "{f13l} {f13}\n"
+                    "{f14l} {f14}\n"
+                    "{f15l} {f15}\n"
+                )
+            }
+        },
     }
     FLAG_BITS = {'c': 0, 'p': 2, 'a': 4, 'z': 6, 's': 7, 't': 8, 'i': 9, 'd': 10, 'o': 11}
     FLAG_TEMPLATE = "{o} {d} {i} {t} {s} {z} {a} {p} {c}"
@@ -760,6 +888,43 @@ class RegisterView (TerminalView):
             return val
         else:
             return val
+
+    def format_xtensa_ps(self, val):
+        ps = int(val, 10)
+
+        intlevel = ps & 0xF
+        excm = bool(ps & (1 << 4))
+        um = bool(ps & (1 << 5))
+        ring = (ps & (2 << 6)) >> 6
+        owb = (ps & (0xF << 8)) >> 8
+        callinc = (ps & (2 << 16)) >> 16
+        woe = bool(ps & (1 << 18))
+
+        intlevel = self.f(Name.Label, 'I') + self.f(Error if intlevel > 0 else Text, str(intlevel))
+        excm = self.f(Error, 'E') if excm else self.f(Text, 'e')
+        um = self.f(Text, 'U' if um else 'K')
+        ring = self.f(Name.Label, 'R') + self.f(Text, str(ring))
+        owb = self.f(Name.Label, 'B') + self.f(Text, str(owb))
+        callinc = self.f(Name.Label, 'C') + self.f(Text, str(callinc))
+        woe = self.f(Error, 'O') if woe else self.f(Text, 'o')
+
+        ps = ' '.join((woe, callinc, owb, ring, um, excm, intlevel))
+
+        return self.f(Text, '[') + ps + self.f(Text, ']')
+
+    def format_xtensa_fcr(self, val):
+        fcr = int(val, 10)
+
+        rm = fcr & 3
+        rm = self.f(Text, ('N', 'T', 'C', 'F')[rm])
+
+        exceptions = ''
+        for flag, bit in {'I': 2, 'U': 3, 'O': 4, 'Z': 5, 'V': 6}.items():
+            flag_set = bool(fcr & (1 << bit))
+            exceptions += self.f(Error, flag) if flag_set else self.f(Text, flag.lower())
+            exceptions += ' '
+
+        return self.f(Text, '[') + exceptions + rm + self.f(Text, ']')
 
 
 class RegisterViewPlugin(ViewPlugin):

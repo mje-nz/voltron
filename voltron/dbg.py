@@ -99,6 +99,7 @@ class DebuggerAdaptor(object):
         "armv7s":   {"pc": "pc", "sp": "sp"},
         "arm64":    {"pc": "pc", "sp": "sp"},
         "powerpc":  {"pc": "pc", "sp": "r1"},
+        "xtensa":   {"pc": "pc", "sp": "a1"},
     }
     cs_archs = {}
     if capstone:
