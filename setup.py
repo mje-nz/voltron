@@ -90,6 +90,7 @@ setup(
             'lldb_att = voltron.lexers:LLDBATTLexer',
             'gdb_intel = voltron.lexers:GDBIntelLexer',
             'gdb_att = voltron.lexers:GDBATTLexer',
+            'gdb_NA = voltron.lexers:GDBNALexer',
             'vdb_intel = voltron.lexers:VDBIntelLexer',
             'vdb_att = voltron.lexers:VDBATTLexer',
             'windbg_intel = voltron.lexers:WinDbgIntelLexer',

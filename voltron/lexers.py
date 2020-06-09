@@ -26,9 +26,11 @@ class DisassemblyLexer(RegexLexer):
     declkw = r'(?:res|d)[bwdqt]|times'
     register = (r'r[0-9]+[bwd]{0,1}|'
                 r'[a-d][lh]|[er]?[a-d]x|[er]?[sbi]p|[er]?[sd]i|[c-gs]s|st[0-7]|'
-                r'mm[0-7]|cr[0-4]|dr[0-367]|tr[3-7]|.mm\d+')
+                r'mm[0-7]|cr[0-4]|dr[0-367]|tr[3-7]|.mm\d+|'
+                r'[afm][0-9]{1,2}|acc(lo,hi)')
     wordop = r'seg|wrt|strict'
     type = r'byte|[dq]?word|ptr|xmmword|opaque'
+    pointer = hexn + r' '
 
     flags = re.IGNORECASE | re.MULTILINE
     tokens = {
@@ -51,15 +53,28 @@ class DisassemblyLexer(RegexLexer):
         'instruction-args': [
             (register, Name.Builtin),
             (string, String),
+            (r'(%s)( <)' % hexn,
+                bygroups(Number.Hex, Punctuation),
+                'address'),
+            include('numbers'),
+            include('punctuation'),
+            (identifier, Name.Variable),
+            (r'[\r\n]+', Text, '#pop'),
+            include('whitespace')
+        ],
+        'numbers': [
             (hexn, Number.Hex),
             (octn, Number.Oct),
             (binn, Number.Bin),
             (floatn, Number.Float),
             (decn, Number.Integer),
+        ],
+        'address': [
+            (r'<', Punctuation, '#push'),
+            (r'>', Punctuation, '#pop'),
+            include('numbers'),
             include('punctuation'),
-            (identifier, Name.Variable),
-            (r'[\r\n]+', Text, '#pop'),
-            include('whitespace')
+            (r'.', Text),
         ],
         'preproc': [
             (r'[^;\n]+', Comment.Preproc),
@@ -100,6 +115,11 @@ class GDBATTLexer(DisassemblyLexer):
 class GDBIntelLexer(DisassemblyLexer):
     name = 'GDB Intel syntax disassembly'
     aliases = ['gdb_intel']
+
+
+class GDBNALexer(DisassemblyLexer):
+    name = 'GDB non-x86 disassembly'
+    aliases = ['gdb_na']
 
 
 class VDBATTLexer(DisassemblyLexer):
