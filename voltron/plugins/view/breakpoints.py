@@ -12,6 +12,7 @@ log = logging.getLogger('view')
 class BreakpointsView (TerminalView):
     def build_requests(self):
         return [
+            api_request('targets', block=self.block),
             api_request('registers', registers=['pc']),
             api_request('breakpoints', block=self.block)
         ]
@@ -19,7 +20,14 @@ class BreakpointsView (TerminalView):
     def render(self, results):
         self.title = '[breakpoints]'
 
-        r_res, b_res = results
+        t_res, r_res, b_res = results
+
+        if t_res and t_res.is_error:
+            error = t_res.message
+        elif t_res is None or t_res and len(t_res.targets) == 0:
+            error = "No such target"
+        else:
+            addr_len = t_res.targets[0]['addr_size'] * 2
 
         # get PC first so we can highlight a breakpoint we're at
         if r_res and r_res.is_success and len(r_res.registers) > 0:
@@ -35,6 +43,7 @@ class BreakpointsView (TerminalView):
                 d = bp.copy()
                 d['locations'] = None
                 d['t'] = term
+                d['addr_len'] = addr_len
                 d['id'] = '#{:<2}'.format(d['id'])
                 if d['one_shot']:
                     d['one_shot'] = self.config.format.one_shot.format(t=term)
